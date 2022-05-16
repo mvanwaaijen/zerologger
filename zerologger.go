@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"path/filepath"
 
 	"github.com/mvanwaaijen/execpath"
 	"github.com/rs/zerolog"
@@ -21,6 +23,7 @@ const (
 
 type Config struct {
 	FileName                string
+	Directory               string
 	LogToFile               bool
 	LogToConsole            bool
 	MaxSizeMB               int
@@ -32,12 +35,19 @@ type Config struct {
 }
 
 func NewDefaultConfig() *Config {
-	ep, err := execpath.Get()
+	ep, err := execpath.GetDir()
 	if err != nil {
 		panic(err)
 	}
+	exePath, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exeName := path.Base(exePath)
+
 	return &Config{
-		FileName:                fmt.Sprintf("%s.log", ep),
+		FileName:                fmt.Sprintf("%s.log", exeName),
+		Directory:               ep,
 		LogToFile:               true,
 		LogToConsole:            true,
 		MaxSizeMB:               DefaultSizeMB,
@@ -56,8 +66,14 @@ func NewDefault() zerolog.Logger {
 func New(cfg *Config) zerolog.Logger {
 	writers := make([]io.Writer, 0)
 	if cfg.LogToFile {
+		if _, err := os.Stat(cfg.Directory); os.IsNotExist(err) {
+			err := os.MkdirAll(cfg.Directory, 0777)
+			if err != nil {
+				panic(err)
+			}
+		}
 		writers = append(writers, &lumberjack.Logger{
-			Filename:   cfg.FileName,
+			Filename:   filepath.Join(cfg.Directory, cfg.FileName),
 			MaxSize:    cfg.MaxSizeMB,
 			MaxAge:     cfg.MaxAgeDays,
 			MaxBackups: cfg.MaxBackups,
