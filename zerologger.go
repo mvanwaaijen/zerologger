@@ -25,6 +25,7 @@ type Config struct {
 	Directory               string
 	LogToFile               bool
 	LogToConsole            bool
+	NoConsoleColor          bool
 	MaxSizeMB               int
 	MaxAgeDays              int
 	MaxBackups              int
@@ -49,6 +50,7 @@ func NewDefaultConfig() *Config {
 		Directory:               ep,
 		LogToFile:               true,
 		LogToConsole:            true,
+		NoConsoleColor:          false,
 		MaxSizeMB:               DefaultSizeMB,
 		MaxAgeDays:              DefaultAgeDays,
 		MaxBackups:              DefaultBackups,
@@ -79,7 +81,7 @@ func New(cfg *Config) zerolog.Logger {
 		})
 	}
 	if cfg.LogToConsole {
-		writers = append(writers, zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: cfg.ConsoleTimeFormatString})
+		writers = append(writers, zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: cfg.ConsoleTimeFormatString, NoColor: cfg.NoConsoleColor})
 	}
 	zerolog.TimeFieldFormat = cfg.FileTimeFormatString
 	if cfg.ShowCaller {
