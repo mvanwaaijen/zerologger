@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/mvanwaaijen/execpath"
@@ -43,7 +42,7 @@ func NewDefaultConfig() *Config {
 	if err != nil {
 		panic(err)
 	}
-	exeName := path.Base(exePath)
+	exeName := filepath.Base(exePath)
 
 	return &Config{
 		FileName:                fmt.Sprintf("%s.log", exeName),
