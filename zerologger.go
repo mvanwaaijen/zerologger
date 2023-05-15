@@ -32,36 +32,35 @@ type Config struct {
 	ShowCaller              bool
 	FileTimeFormatString    string
 	ConsoleTimeFormatString string
+	LogLevel                zerolog.Level
 }
 
-func NewDefaultConfig() *Config {
-	ep, err := execpath.GetDir()
+func DefaultConfig() *Config {
+	ep, err := execpath.Get()
 	if err != nil {
 		panic(err)
 	}
-	exePath, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exeName := filepath.Base(exePath)
+
+	exePath, exeName := filepath.Split(ep)
 
 	return &Config{
 		FileName:                fmt.Sprintf("%s.log", exeName),
-		Directory:               ep,
+		Directory:               exePath,
 		LogToFile:               true,
 		LogToConsole:            true,
 		NoConsoleColor:          false,
 		MaxSizeMB:               DefaultSizeMB,
 		MaxAgeDays:              DefaultAgeDays,
 		MaxBackups:              DefaultBackups,
-		ShowCaller:              true,
+		ShowCaller:              false,
 		FileTimeFormatString:    ISO8601TimeString,
 		ConsoleTimeFormatString: LocalTimeString,
+		LogLevel:                zerolog.InfoLevel,
 	}
 }
 
 func NewDefault() zerolog.Logger {
-	return New(NewDefaultConfig())
+	return New(DefaultConfig())
 }
 
 func New(cfg *Config) zerolog.Logger {
@@ -89,5 +88,5 @@ func New(cfg *Config) zerolog.Logger {
 	} else {
 		log.Logger = log.Output(io.MultiWriter(writers...))
 	}
-	return log.Logger
+	return log.Logger.Level(cfg.LogLevel)
 }
